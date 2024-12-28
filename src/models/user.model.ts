@@ -1,21 +1,22 @@
-import { model, Schema } from "mongoose";
+import { Schema, model, Document } from "mongoose";
 import bcrypt from "bcryptjs";
 
-const userSchema = new Schema({
+export interface IUser extends Document {
+  username: string;
+  password: string;
+  comparePassword(password: string): Promise<boolean>;
+}
+
+const userSchema = new Schema<IUser>({
   username: {
     type: String,
     required: true,
-    unique: true,
   },
   password: {
     type: String,
     required: true,
   },
 });
-
-const User = model("User", userSchema);
-
-export default User;
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) next();
@@ -32,12 +33,11 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.methods.comparePassword = async function (
-  candidatePassword: string
+  password: string
 ): Promise<boolean> {
-  try {
-    return await bcrypt.compare(candidatePassword, this.password);
-  } catch (error: unknown) {
-    console.log(error);
-    return false;
-  }
+  return bcrypt.compare(password, this.password);
 };
+
+const User = model<IUser>("User", userSchema);
+
+export default User;
