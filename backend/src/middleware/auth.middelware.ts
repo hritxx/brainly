@@ -18,9 +18,11 @@ export const authMiddleware = async (
     const decoded = jwt.verify(header as string, jwt_secret as string);
     if (decoded) {
       req.userId = (decoded as jwt.JwtPayload).id;
+      next();
+    } else {
+      res.status(403).json({ message: "You are not logged in." });
     }
-    next();
-  } catch (error) {
-    res.status(403).json({ message: "You are not signed in." });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
   }
 };
